@@ -83,7 +83,7 @@ exports.sendOTP = catchAsync(async (req, res, next) => {
 
   // TODO send mail
   mailService.sendEmail({
-    from: "shreyanshshah242@gmail.com",
+    from: "dhruvgajera05@gmail.com",
     to: user.email,
     subject: "Verification OTP",
     html: otp(user.firstName, new_otp),

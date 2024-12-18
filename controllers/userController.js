@@ -4,6 +4,7 @@ const User = require("../models/user");
 const VideoCall = require("../models/videoCall");
 const catchAsync = require("../utils/catchAsync");
 const filterObj = require("../utils/filterObj");
+const multer = require("multer");
 
 const { generateToken04 } = require("./zegoServerAssistant");
 
@@ -16,22 +17,27 @@ const appID = process.env.ZEGO_APP_ID; // type: number
 const serverSecret = process.env.ZEGO_SERVER_SECRET; // type: 32 byte length string
 
 exports.getMe = catchAsync(async (req, res, next) => {
+  let userData = await User.findById(req.user.id);
+
+  userData.avatar = `http://localhost:3001/src/userImages/${userData.avatar}`;
+
   res.status(200).json({
     status: "success",
-    data: req.user,
+    data: userData,
   });
 });
 
 exports.updateMe = catchAsync(async (req, res, next) => {
-  const filteredBody = filterObj(
-    req.body,
-    "firstName",
-    "lastName",
-    "about",
-    "avatar"
-  );
 
-  const userDoc = await User.findByIdAndUpdate(req.user._id, filteredBody);
+  const { firstName, about, avatar } = req.body;
+
+  // Construct the update object
+  const updateFields = {};
+  if (firstName) updateFields.firstName = firstName;
+  if (about) updateFields.about = about;
+  if (avatar) updateFields.avatar = avatar;
+
+  const userDoc = await User.findByIdAndUpdate(req.user._id, updateFields);
 
   res.status(200).json({
     status: "success",
@@ -39,6 +45,19 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     message: "User Updated successfully",
   });
 });
+
+// Image upload setup for movie 
+let storageForUserImage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "src/userImages/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.fieldname + "-" + Date.now() + "-" + file.originalname);
+  },
+});
+exports.uploadUserImages = multer({
+  storage: storageForUserImage,
+}).single("image"); // Single file upload for image
 
 exports.getUsers = catchAsync(async (req, res, next) => {
   const all_users = await User.find({

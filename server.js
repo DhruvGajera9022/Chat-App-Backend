@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
-dotenv.config({ path: "./config.env" });
+require("dotenv").config();
 
 process.on("uncaughtException", (err) => {
   console.log(err);
   console.log("UNCAUGHT Exception! Shutting down ...");
-  process.exit(1); // Exit Code 1 indicates that a container shut down, either because of an application failure.
+  process.exit(1);
 });
 
 const app = require("./app");
@@ -21,6 +21,8 @@ const FriendRequest = require("./models/friendRequest");
 const OneToOneMessage = require("./models/OneToOneMessage");
 const AudioCall = require("./models/audioCall");
 const VideoCall = require("./models/videoCall");
+
+const colors = require("colors");
 
 // Add this
 // Create an io server and allow for CORS from http://localhost:3000 with GET and POST methods
@@ -37,33 +39,28 @@ const DB = process.env.DATABASE.replace(
 );
 
 mongoose
-  .connect(DB, {
-    // useNewUrlParser: true, // The underlying MongoDB driver has deprecated their current connection string parser. Because this is a major change, they added the useNewUrlParser flag to allow users to fall back to the old parser if they find a bug in the new parser.
-    // useCreateIndex: true, // Again previously MongoDB used an ensureIndex function call to ensure that Indexes exist and, if they didn't, to create one. This too was deprecated in favour of createIndex . the useCreateIndex option ensures that you are using the new function calls.
-    // useFindAndModify: false, // findAndModify is deprecated. Use findOneAndUpdate, findOneAndReplace or findOneAndDelete instead.
-    // useUnifiedTopology: true, // Set to true to opt in to using the MongoDB driver's new connection management engine. You should set this option to true , except for the unlikely case that it prevents you from maintaining a stable connection.
-  })
+  .connect(DB, {})
   .then((con) => {
     console.log("DB Connection successful");
   });
 
-const port = process.env.PORT || 8000;
+const port = process.env.PORT;
 
 server.listen(port, () => {
   console.log(`App running on port http://localhost:3001`);
 });
 
-// Add this
-// Listen for when the client connects via socket.io-client
+
+// connection
 io.on("connection", async (socket) => {
-  console.log(JSON.stringify(socket.handshake.query));
+  console.log(JSON.stringify(socket.handshake.query).bgMagenta.white);
   const user_id = socket.handshake.query["user_id"];
 
-  console.log(`User connected ${socket.id}`);
+  console.log(`USER CONNECTED: ${socket.id}`.bgGreen.white.bold);
 
   if (user_id != null && Boolean(user_id)) {
     try {
-      User.findByIdAndUpdate(user_id, {
+      await User.findByIdAndUpdate(user_id, {
         socket_id: socket.id,
         status: "Online",
       });
@@ -72,7 +69,7 @@ io.on("connection", async (socket) => {
     }
   }
 
-  // We can write our socket event listeners in here...
+  // friend_request
   socket.on("friend_request", async (data) => {
     const to = await User.findById(data.to).select("socket_id");
     const from = await User.findById(data.from).select("socket_id");
@@ -82,6 +79,7 @@ io.on("connection", async (socket) => {
       sender: data.from,
       recipient: data.to,
     });
+
     // emit event request received to recipient
     io.to(to?.socket_id).emit("new_friend_request", {
       message: "New friend request received",
@@ -91,12 +89,13 @@ io.on("connection", async (socket) => {
     });
   });
 
+  // accept_request
   socket.on("accept_request", async (data) => {
     // accept friend request => add ref of each other in friends array
-    console.log(data);
+    // console.log(data);
     const request_doc = await FriendRequest.findById(data.request_id);
 
-    console.log(request_doc);
+    // console.log(request_doc);
 
     const sender = await User.findById(request_doc.sender);
     const receiver = await User.findById(request_doc.recipient);
@@ -121,6 +120,7 @@ io.on("connection", async (socket) => {
     });
   });
 
+  // get_direct_conversations
   socket.on("get_direct_conversations", async ({ user_id }, callback) => {
     const existing_conversations = await OneToOneMessage.find({
       participants: { $all: [user_id] },
@@ -133,6 +133,7 @@ io.on("connection", async (socket) => {
     callback(existing_conversations);
   });
 
+  // start_conversation
   socket.on("start_conversation", async (data) => {
     // data: {to: from:}
 
@@ -167,6 +168,7 @@ io.on("connection", async (socket) => {
     }
   });
 
+  // get_messages
   socket.on("get_messages", async (data, callback) => {
     try {
       const { messages } = await OneToOneMessage.findById(
@@ -178,18 +180,14 @@ io.on("connection", async (socket) => {
     }
   });
 
-  // Handle incoming text/link messages
+  // text_message
   socket.on("text_message", async (data) => {
-    console.log("Received message:", data);
-
-    // data: {to, from, text}
+    console.log("RECEIVED TEXT MESSAGE:", data);
 
     const { message, conversation_id, from, to, type } = data;
 
     const to_user = await User.findById(to);
     const from_user = await User.findById(from);
-
-    // message => {to, from, type, created_at, text, file}
 
     const new_message = {
       to: to,
@@ -205,8 +203,6 @@ io.on("connection", async (socket) => {
     // save to db`
     await chat.save({ new: true, validateModifiedOnly: true });
 
-    // emit incoming_message -> to user
-
     io.to(to_user?.socket_id).emit("new_message", {
       conversation_id,
       message: new_message,
@@ -219,11 +215,9 @@ io.on("connection", async (socket) => {
     });
   });
 
-  // handle Media/Document Message
+  // file_message
   socket.on("file_message", (data) => {
-    console.log("Received message:", data);
-
-    // data: {to, from, text, file}
+    console.log("RECEIVED FILE MESSAGE:", data);
 
     // Get the file extension
     const fileExtension = path.extname(data.file.name);
@@ -235,7 +229,7 @@ io.on("connection", async (socket) => {
 
     // upload file to AWS s3
 
-    // create a new conversation if its dosent exists yet or add a new message to existing conversation
+    // create a new conversation if its doesn't exists yet or add a new message to existing conversation
 
     // save to db
 
@@ -243,6 +237,8 @@ io.on("connection", async (socket) => {
 
     // emit outgoing_message -> from user
   });
+
+
 
   // -------------- HANDLE AUDIO CALL SOCKET EVENTS ----------------- //
 
@@ -460,12 +456,16 @@ io.on("connection", async (socket) => {
     // Find user by ID and set status as offline
 
     if (data.user_id) {
-      await User.findByIdAndUpdate(data.user_id, { status: "Offline" });
+      await User.findByIdAndUpdate(data.user_id,
+        {
+          socket_id: '',
+          status: "Offline"
+        });
     }
 
     // broadcast to all conversation rooms of this user that this user is offline (disconnected)
 
-    console.log("closing connection");
+    console.log("USER DISCONNECTED".bgRed.white.bold);
     socket.disconnect(0);
   });
 });
