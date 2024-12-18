@@ -53,7 +53,7 @@ server.listen(port, () => {
 
 // connection
 io.on("connection", async (socket) => {
-  console.log(JSON.stringify(socket.handshake.query).bgMagenta.white);
+  console.log(`CONNECTION INFO: ${JSON.stringify(socket.handshake.query)}`.bgMagenta.white);
   const user_id = socket.handshake.query["user_id"];
 
   console.log(`USER CONNECTED: ${socket.id}`.bgGreen.white.bold);
