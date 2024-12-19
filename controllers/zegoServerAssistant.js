@@ -55,7 +55,7 @@ function generateToken04(
   effectiveTimeInSeconds,
   payload
 ) {
-  
+
   if (!appId || typeof appId !== "number") {
     throw {
       errorCode: ErrorCode.appIDInvalid,
@@ -91,10 +91,10 @@ function generateToken04(
   };
   // Convert token information into json
   var plaintText = JSON.stringify(tokenInfo);
-  console.log("plain text: ", plaintText);
+  console.log(`Plain Text: ${plaintText}`.bgYellow.black);
   // A randomly generated 16-byte string is used as an AES encryption vector, and it is placed in front of the ciphertext and encoded with Base64 to generate the final token
   var iv = makeRandomIv();
-  console.log("iv", iv);
+  console.log(`IV ${iv}`.bgYellow.black);
   /// encrypt
   var encryptBuf = aesEncrypt(plaintText, secret, iv);
   // token = binary splicing expiration time + Base64(iv length + iv + encrypted information length + encrypted information)

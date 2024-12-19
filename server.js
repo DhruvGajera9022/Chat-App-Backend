@@ -128,7 +128,7 @@ io.on("connection", async (socket) => {
 
     // db.books.find({ authors: { $elemMatch: { name: "John Smith" } } })
 
-    console.log(existing_conversations);
+    console.log(`Get Direct Conversations: ${existing_conversations}`.bgBlue.white);
 
     callback(existing_conversations);
   });
@@ -145,7 +145,7 @@ io.on("connection", async (socket) => {
       participants: { $size: 2, $all: [to, from] },
     }).populate("participants", "firstName lastName _id email status");
 
-    console.log(existing_conversations[0], "Existing Conversation");
+    console.log(`Existing Conversation: ${existing_conversations[0]}`.bgBlue.white);
 
     // if no => create a new OneToOneMessage doc & emit event "start_chat" & send conversation details as payload
     if (existing_conversations.length === 0) {
@@ -158,7 +158,7 @@ io.on("connection", async (socket) => {
         "firstName lastName _id email status"
       );
 
-      console.log(new_chat);
+      console.log(`New Chat: ${new_chat}`.bgBlue.white);
 
       socket.emit("start_chat", new_chat);
     }
@@ -176,13 +176,13 @@ io.on("connection", async (socket) => {
       ).select("messages");
       callback(messages);
     } catch (error) {
-      console.log(error);
+      console.log(`Error in Get Message: ${error}`.bgRed.white);
     }
   });
 
   // text_message
   socket.on("text_message", async (data) => {
-    console.log("RECEIVED TEXT MESSAGE:", data);
+    console.log(`RECEIVED TEXT MESSAGE: ${data}`.bgGreen.black);
 
     const { message, conversation_id, from, to, type } = data;
 
@@ -217,7 +217,7 @@ io.on("connection", async (socket) => {
 
   // file_message
   socket.on("file_message", (data) => {
-    console.log("RECEIVED FILE MESSAGE:", data);
+    console.log(`RECEIVED FILE MESSAGE: ${data}`.bgGreen.black);
 
     // Get the file extension
     const fileExtension = path.extname(data.file.name);
@@ -249,7 +249,7 @@ io.on("connection", async (socket) => {
     const to_user = await User.findById(to);
     const from_user = await User.findById(from);
 
-    console.log("to_user", to_user);
+    console.log(`To USER from start audio call: ${to_user}`.bgBlue.white);
 
     // send notification to receiver of call
     io.to(to_user?.socket_id).emit("audio_call_notification", {
@@ -263,7 +263,7 @@ io.on("connection", async (socket) => {
 
   // handle audio_call_not_picked
   socket.on("audio_call_not_picked", async (data) => {
-    console.log(data);
+    console.log(`Audio Call Not Picked: ${data}`.bgRed.white);
     // find and update call record
     const { to, from } = data;
 
@@ -350,12 +350,12 @@ io.on("connection", async (socket) => {
   socket.on("start_video_call", async (data) => {
     const { from, to, roomID } = data;
 
-    console.log(data);
+    console.log(`Start Video Call: ${data}`.bgGreen.black);
 
     const to_user = await User.findById(to);
     const from_user = await User.findById(from);
 
-    console.log("to_user", to_user);
+    console.log(`To USER: ${to_user}`.bgBlue.white);
 
     // send notification to receiver of call
     io.to(to_user?.socket_id).emit("video_call_notification", {
@@ -369,7 +369,7 @@ io.on("connection", async (socket) => {
 
   // handle video_call_not_picked
   socket.on("video_call_not_picked", async (data) => {
-    console.log(data);
+    console.log(`Video Call Not Picked: ${data}`.bgRed.white);
     // find and update call record
     const { to, from } = data;
 
@@ -471,8 +471,7 @@ io.on("connection", async (socket) => {
 });
 
 process.on("unhandledRejection", (err) => {
-  console.log(err);
-  console.log("UNHANDLED REJECTION! Shutting down ...");
+  console.log(`UnhandledRejection: ${err}`.bgRed.white);
   server.close(() => {
     process.exit(1); //  Exit Code 1 indicates that a container shut down, either because of an application failure.
   });

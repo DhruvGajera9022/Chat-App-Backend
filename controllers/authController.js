@@ -12,6 +12,8 @@ const resetPassword = require("../Templates/Mail/resetPassword");
 const { promisify } = require("util");
 const catchAsync = require("../utils/catchAsync");
 
+const colors = require("colors");
+
 // this function will return you jwt token
 const signToken = (userId) => jwt.sign({ userId }, process.env.JWT_SECRET);
 
@@ -79,7 +81,7 @@ exports.sendOTP = catchAsync(async (req, res, next) => {
 
   await user.save({ new: true, validateModifiedOnly: true });
 
-  console.log(new_otp);
+  console.log(`New Otp: ${new_otp}`.bgGreen.black);
 
   // TODO send mail
   mailService.sendEmail({
@@ -247,9 +249,8 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 3) Send it to user's email
   try {
     const resetURL = `http://localhost:3000/auth/new-password?token=${resetToken}`;
-    // TODO => Send Email with this Reset URL to user's email address
 
-    console.log(resetURL);
+    console.log(`Reset URL: ${resetURL}`.bgGreen.black);
 
     mailService.sendEmail({
       from: "shreyanshshah242@gmail.com",

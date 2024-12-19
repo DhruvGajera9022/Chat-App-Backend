@@ -127,7 +127,7 @@ exports.generateZegoToken = catchAsync(async (req, res, next) => {
   try {
     const { userId, room_id } = req.body;
 
-    console.log(userId, room_id, "from generate zego token");
+    console.log(`from generate zego token: ${userId}, ${room_id},`.bgYellow.black);
 
     const effectiveTimeInSeconds = 3600; //type: number; unit: s; token expiration time, unit: second
     const payloadObject = {
@@ -155,7 +155,7 @@ exports.generateZegoToken = catchAsync(async (req, res, next) => {
       token,
     });
   } catch (err) {
-    console.log(err);
+    console.log(`GenerateZegoToken: ${err}`.bgRed.white);
   }
 });
 
@@ -224,7 +224,7 @@ exports.getCallLogs = catchAsync(async (req, res, next) => {
     participants: { $all: [user_id] },
   }).populate("from to");
 
-  console.log(audio_calls, video_calls);
+  console.log(`GetCallLogs: ${audio_calls}, ${video_calls}`.bgBlue.white);
 
   for (let elm of audio_calls) {
     const missed = elm.verdict !== "Accepted";

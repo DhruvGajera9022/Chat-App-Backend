@@ -25,7 +25,7 @@ const sendSGMail = async ({
 
     return sgMail.send(msg);
   } catch (error) {
-    console.log(error);
+    console.log(`Error in SG Mail: ${error}`.bgRed.white.bold);
   }
 };
 

@@ -87,7 +87,7 @@ userSchema.pre("save", async function (next) {
   // Hash the otp with cost of 12
   this.otp = await bcrypt.hash(this.otp.toString(), 12);
 
-  console.log(this.otp.toString(), "FROM PRE SAVE HOOK");
+  console.log(`FROM PRE SAVE HOOK: ${this.otp.toString()}`.bgBlue.white);
 
   next();
 });
