@@ -10,7 +10,7 @@ router.post(
 );
 router.get("/get-call-logs", authController.protect, userController.getCallLogs);
 router.get("/get-me", authController.protect, userController.getMe);
-router.post("/update-me", authController.protect, userController.uploadUserImages, userController.updateMe);
+router.patch("/update-me", authController.protect, userController.uploadUserImages, userController.updateMe);
 router.get("/get-all-verified-users", authController.protect, userController.getAllVerifiedUsers);
 router.get("/get-users", authController.protect, userController.getUsers);
 router.get("/get-requests", authController.protect, userController.getRequests);
